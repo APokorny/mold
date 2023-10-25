@@ -1551,7 +1551,7 @@ struct VersionPattern {
 };
 
 struct SectionOrder {
-  enum { NONE, SECTION, GROUP, ADDR, ALIGN, SYMBOL } type = NONE;
+  enum { NONE, SECTION, GROUP, ADDR, ALIGN, SYMBOL, GAP } type = NONE;
   std::string name;
   u64 value = 0;
 };

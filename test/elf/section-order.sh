@@ -41,3 +41,8 @@ grep -Eq '\b0+200040 .* rodata_start$' $t/log3
 grep -Eq '\b0+300000 .* phdr_start$' $t/log3
 grep -Eq '\b0+301000 .* phdr_end$' $t/log3
 grep -Eq '\b0+400000 .* text_start$' $t/log3
+
+$CC -B. -o $t/exe4 $t/a.o -no-pie \
+  -Wl,--section-order='=0x100000 PHDR =0x200000 .fn2 TEXT =0x300000 +0x1000 .fn1 DATA BSS RODATA'
+
+readelf -SW $t/exe4 | grep -q '\.fn1 .*00301000'

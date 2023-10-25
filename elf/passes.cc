@@ -2232,6 +2232,9 @@ static void set_virtual_addresses_by_order(Context<E> &ctx) {
     case SectionOrder::SYMBOL:
       get_symbol(ctx, ord.name)->value = addr;
       break;
+    case SectionOrder::GAP:
+      addr += ord.value;
+      break;
     default:
       unreachable();
     }

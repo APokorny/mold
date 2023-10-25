@@ -331,6 +331,7 @@ parse_section_order(Context<E> &ctx, std::string_view arg) {
   static std::regex re3(R"(^\s*=(0x[0-9a-f]+|\d+)(?:\s|$))", flags);
   static std::regex re4(R"(^\s*%(0x[0-9a-f]+|\d*)(?:\s|$))", flags);
   static std::regex re5(R"(^\s*!(\S+)(?:\s|$))", flags);
+  static std::regex re6(R"(^\s*\+(0x[0-9a-f]+|\d*)(?:\s|$))", flags);
 
   std::vector<SectionOrder> vec;
   arg = string_trim(arg);
@@ -356,6 +357,10 @@ parse_section_order(Context<E> &ctx, std::string_view arg) {
     } else if (std::regex_search(arg.data(), arg.data() + arg.size(), m, re5)) {
       ord.type = SectionOrder::SYMBOL;
       ord.name = m[1].str();
+    } else if (std::regex_search(arg.data(), arg.data() + arg.size(), m, re6)) {
+      ord.type = SectionOrder::GAP;
+      std::string s = m[1];
+      ord.value = std::stoull(s, nullptr, s.starts_with("0x") ? 16 : 10);
     } else {
       Fatal(ctx) << "--section-order: parse error: " << arg;
     }
