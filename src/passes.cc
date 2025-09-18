@@ -2739,6 +2739,7 @@ static void set_virtual_addresses_regular(Context<E> &ctx) {
 template <typename E>
 static void set_virtual_addresses_by_order(Context<E> &ctx) {
   std::vector<Chunk<E> *> &c = ctx.chunks;
+  std::vector<std::pair<u64, u64>> regions;
   u64 addr = ctx.arg.image_base;
   i64 i = 0;
 
@@ -2777,6 +2778,22 @@ static void set_virtual_addresses_by_order(Context<E> &ctx) {
     } while (i < c.size() && !(c[i]->shdr.sh_flags & SHF_ALLOC));
   };
 
+  auto add_region = [&ctx, &addr, &regions](u64 value) {
+    if (!regions.empty()) {
+      regions.back().second = addr;
+      for (auto const& region : regions)
+        if (region.first <= value && region.second > value)
+          Warn(ctx) << ": symbols ordered to 0x" << std::hex << region.first << " exceed 0x"
+                    << std::hex << value << " up to 0x" << std::hex << region.second;
+    }
+
+    // silently ignore setting the image base explicitly 
+    // in the first 'region'
+    if (regions.empty() || regions.back().first != value)
+      regions.push_back({value,value});
+    addr = value;
+  };
+  add_region(ctx.arg.image_base);
   for (i64 j = 0; j < ctx.arg.section_order.size(); j++) {
     SectionOrder &ord = ctx.arg.section_order[j];
     switch (ord.type) {
@@ -2789,7 +2806,7 @@ static void set_virtual_addresses_by_order(Context<E> &ctx) {
         assign_addr();
       break;
     case SectionOrder::ADDR:
-      addr = ord.value;
+      add_region(ord.value);
       break;
     case SectionOrder::ALIGN:
       addr = align_to(addr, ord.value);
